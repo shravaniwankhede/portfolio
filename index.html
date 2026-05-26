@@ -3235,6 +3235,28 @@
         transition: width 1.2s linear;
       }
 
+      .loader-sound-prompt {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: #7A6A55;
+        opacity: 0;
+        margin-top: 1rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        animation: fadeInPrompt 0.8s ease 0.6s forwards, pulsePrompt 2.5s infinite ease-in-out;
+        pointer-events: none;
+        transition: color 0.3s ease, opacity 0.5s ease;
+      }
+
+      @keyframes fadeInPrompt {
+        to { opacity: 0.65; }
+      }
+
+      @keyframes pulsePrompt {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+      }
+
       /* --- MAIN FOOTER --- */
       .footer.main-footer {
         padding: 1rem 0;
@@ -3502,6 +3524,9 @@
         <div class="loader-progress-bar-container">
           <div class="loader-progress-bar" id="loaderProgressBar"></div>
         </div>
+        <div class="loader-sound-prompt" id="loaderSoundPrompt">
+          ( click anywhere for sound ♫ )
+        </div>
       </div>
     </div>
 
@@ -3754,6 +3779,17 @@
         const handleFirstInteraction = () => {
           if (window.isSoundOn) {
             window.startAmbientTones();
+            const promptEl = document.getElementById('loaderSoundPrompt');
+            if (promptEl) {
+              promptEl.textContent = 'sound enabled ♪';
+              promptEl.style.color = '#3DAA6A';
+              promptEl.style.animation = 'none';
+              promptEl.style.opacity = '1';
+              setTimeout(() => {
+                promptEl.style.transition = 'opacity 0.6s ease';
+                promptEl.style.opacity = '0';
+              }, 800);
+            }
           }
           const events = ['click', 'touchstart', 'keydown', 'mousedown', 'pointerdown'];
           events.forEach(evt => {
@@ -3768,6 +3804,14 @@
         // Try starting immediately on load (if autoplay permits)
         try {
           window.startAmbientTones();
+          setTimeout(() => {
+            if (window.audioCtx && window.audioCtx.state === 'running') {
+              const promptEl = document.getElementById('loaderSoundPrompt');
+              if (promptEl) {
+                promptEl.style.display = 'none';
+              }
+            }
+          }, 100);
         } catch (e) {
           console.log("Autoplay blocked: music will start on first user interaction.", e);
         }
