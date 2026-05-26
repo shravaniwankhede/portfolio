@@ -3750,16 +3750,27 @@
 
         window.isSoundOn = true;
 
-        // Auto start on first touch/click
+        // Auto start on first user interaction
         const handleFirstInteraction = () => {
           if (window.isSoundOn) {
             window.startAmbientTones();
           }
-          window.removeEventListener('click', handleFirstInteraction);
-          window.removeEventListener('touchstart', handleFirstInteraction);
+          const events = ['click', 'touchstart', 'keydown', 'mousedown', 'pointerdown'];
+          events.forEach(evt => {
+            window.removeEventListener(evt, handleFirstInteraction);
+          });
         };
-        window.addEventListener('click', handleFirstInteraction);
-        window.addEventListener('touchstart', handleFirstInteraction);
+        const events = ['click', 'touchstart', 'keydown', 'mousedown', 'pointerdown'];
+        events.forEach(evt => {
+          window.addEventListener(evt, handleFirstInteraction);
+        });
+
+        // Try starting immediately on load (if autoplay permits)
+        try {
+          window.startAmbientTones();
+        } catch (e) {
+          console.log("Autoplay blocked: music will start on first user interaction.", e);
+        }
       })();
     </script>
     
@@ -5393,6 +5404,12 @@ love would remember you first.`;
             
             console.log('Contact Form Submission:', { name, email, subject, message });
             
+            // Open the mail application synchronously (directly triggered by user gesture to avoid browser block)
+            const mailtoUrl = `mailto:shravaniw139@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("Name: " + name + "\nEmail: " + email + "\n\n" + message)}`;
+            const tempLink = document.createElement('a');
+            tempLink.href = mailtoUrl;
+            tempLink.click();
+
             // Set loading state
             submitBtn.classList.add('loading');
             submitBtn.disabled = true;
@@ -5403,10 +5420,6 @@ love would remember you first.`;
               submitBtn.classList.remove('loading');
               submitBtn.classList.add('success');
               submitBtn.querySelector('.btn-text').textContent = '✓ sent!';
-              
-              // Direct email redirection using mailto:
-              const mailtoUrl = `mailto:shravaniw139@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("Name: " + name + "\nEmail: " + email + "\n\n" + message)}`;
-              window.location.href = mailtoUrl;
               
               // Fire confetti
               const rect = submitBtn.getBoundingClientRect();
