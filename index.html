@@ -5404,52 +5404,90 @@ love would remember you first.`;
             
             console.log('Contact Form Submission:', { name, email, subject, message });
             
-            // Open the mail application synchronously (directly triggered by user gesture to avoid browser block)
-            const mailtoUrl = `mailto:shravaniw139@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("Name: " + name + "\nEmail: " + email + "\n\n" + message)}`;
-            const tempLink = document.createElement('a');
-            tempLink.href = mailtoUrl;
-            tempLink.click();
-
             // Set loading state
             submitBtn.classList.add('loading');
             submitBtn.disabled = true;
             submitBtn.querySelector('.btn-text').textContent = '...';
-            
-            setTimeout(() => {
-              // Set success state
-              submitBtn.classList.remove('loading');
-              submitBtn.classList.add('success');
-              submitBtn.querySelector('.btn-text').textContent = '✓ sent!';
-              
-              // Fire confetti
-              const rect = submitBtn.getBoundingClientRect();
-              const x = (rect.left + rect.width / 2) / window.innerWidth;
-              const y = (rect.top + rect.height / 2) / window.innerHeight;
-              
-              const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-              const confettiColors = currentTheme === 'dark' 
-                ? ['#00D4FF', '#7B5EA7', '#ffffff'] 
-                : ['#C9973A', '#6B3F1E', '#FAF4EC'];
-                
-              if (typeof confetti === 'function') {
-                confetti({
-                  particleCount: 80,
-                  spread: 60,
-                  origin: { x, y },
-                  colors: confettiColors
-                });
-              }
-              
-              // Reset button after 3 seconds
+
+            function showSuccessFeedback() {
               setTimeout(() => {
-                submitBtn.classList.remove('success');
+                // Set success state
+                submitBtn.classList.remove('loading');
+                submitBtn.classList.add('success');
+                submitBtn.querySelector('.btn-text').textContent = '✓ sent!';
+                
+                // Fire confetti
+                const rect = submitBtn.getBoundingClientRect();
+                const x = (rect.left + rect.width / 2) / window.innerWidth;
+                const y = (rect.top + rect.height / 2) / window.innerHeight;
+                
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                const confettiColors = currentTheme === 'dark' 
+                  ? ['#00D4FF', '#7B5EA7', '#ffffff'] 
+                  : ['#C9973A', '#6B3F1E', '#FAF4EC'];
+                  
+                if (typeof confetti === 'function') {
+                  confetti({
+                    particleCount: 80,
+                    spread: 60,
+                    origin: { x, y },
+                    colors: confettiColors
+                  });
+                }
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                  submitBtn.classList.remove('success');
+                  submitBtn.disabled = false;
+                  submitBtn.querySelector('.btn-text').textContent = 'send it ✨';
+                  contactForm.reset();
+                  formSubject.classList.remove('has-value');
+                }, 3000);
+                
+              }, 1500);
+            }
+
+            // Web3Forms configuration (Get your access key from web3forms.com)
+            const WEB3FORMS_ACCESS_KEY = "c029fe31-6162-45a6-a8b3-d31ebccc95d1"; 
+
+            if (WEB3FORMS_ACCESS_KEY && WEB3FORMS_ACCESS_KEY !== "YOUR_ACCESS_KEY_HERE") {
+              // Send details automatically using Web3Forms in the background
+              fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                  access_key: WEB3FORMS_ACCESS_KEY,
+                  name: name,
+                  email: email,
+                  subject: `Portfolio: ${subject}`,
+                  message: message
+                })
+              })
+              .then(async (response) => {
+                if (response.status === 200) {
+                  showSuccessFeedback();
+                } else {
+                  throw new Error("Form submission failed");
+                }
+              })
+              .catch((error) => {
+                console.error('Web3Forms Error:', error);
+                submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
-                submitBtn.querySelector('.btn-text').textContent = 'send it ✨';
-                contactForm.reset();
-                formSubject.classList.remove('has-value');
-              }, 3000);
-              
-            }, 1500);
+                submitBtn.querySelector('.btn-text').textContent = 'Error! Try again';
+              });
+            } else {
+              // Fallback to mailto if no access key is configured
+              console.warn("Web3Forms Access Key is not configured. Falling back to mailto client.");
+              const mailtoUrl = `mailto:shravaniw139@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("Name: " + name + "\nEmail: " + email + "\n\n" + message)}`;
+              const tempLink = document.createElement('a');
+              tempLink.href = mailtoUrl;
+              tempLink.click();
+              showSuccessFeedback();
+            }
           });
         }
       });
